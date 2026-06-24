@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CV. JAYA ABADI - Traceability</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; }
+    
+    .header {
+      background: #2c5f2e;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 { font-size: 22px; }
+    .header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+
+    .container { max-width: 600px; margin: 20px auto; padding: 0 16px; }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .card h2 {
+      font-size: 16px;
+      color: #2c5f2e;
+      margin-bottom: 12px;
+      border-bottom: 2px solid #2c5f2e;
+      padding-bottom: 6px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #888; }
+    .info-value { font-weight: bold; }
+
+    .video-wrap {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #000;
+    }
+    .video-wrap iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
+    }
+    .no-video {
+      text-align: center;
+      padding: 40px;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #888;
+    }
+    .error {
+      text-align: center;
+      padding: 40px 20px;
+      color: red;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🌲 CV. JAYA ABADI</h1>
+    <p>Wood Production Traceability</p>
+  </div>
+
+  <div class="container">
+    <div id="content" class="loading">Memuat data...</div>
+  </div>
+
+  <div class="footer">© 2026 CV. JAYA ABADI — Wood Production Tracking System</div>
+
+  <script>
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1Y2lpdHFvZm15dGVhaG1iY3hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MjkwMDMsImV4cCI6MjA5NDUwNTAwM30.bIZbh5pxleDPq1i1X6H5n1kGOQ3ZPmi4j-TtYXTdprY';
+    const PROJECT = 'quciitqofmyteahmbcxk';
+
+    function getParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    function formatTanggal(raw) {
+      if (!raw) return '-';
+      var d = new Date(raw);
+      var hari = String(d.getDate()).padStart(2, '0');
+      var bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][d.getMonth()];
+      return hari + ' ' + bulan + ' ' + d.getFullYear();
+    }
+
+    function getYoutubeEmbedUrl(url) {
+      if (!url) return null;
+      var match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+      return match ? 'https://www.youtube.com/embed/' + match[1] : null;
+    }
+
+    async function loadData() {
+      var noPalet = getParam('palet');
+      if (!noPalet) {
+        document.getElementById('content').innerHTML = '<div class="error">❌ No palet tidak ditemukan di URL.</div>';
+        return;
+      }
+
+      try {
+        var res = await fetch(
+          `https://${PROJECT}.supabase.co/rest/v1/sawmill?no_palet_sawmill=eq.${encodeURIComponent(noPalet)}&select=no_palet_sawmill,no_log_trim,created_at,video_url&limit=1`,
+          {
+            headers: {
+              'apikey': ANON_KEY,
+              'Authorization': 'Bearer ' + ANON_KEY
+            }
+          }
+        );
+
+        var data = await res.json();
+
+        if (!data || data.length === 0) {
+          document.getElementById('content').innerHTML = '<div class="error">❌ Data palet tidak ditemukan.</div>';
+          return;
+        }
+
+        var d = data[0];
+        var embedUrl = getYoutubeEmbedUrl(d.video_url);
+
+        document.getElementById('content').innerHTML = `
+          <div class="card">
+            <h2>📋 Informasi Palet</h2>
+            <div class="info-row">
+              <span class="info-label">No Palet Sawmill</span>
+              <span class="info-value">${d.no_palet_sawmill || '-'}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">No Log Trim</span>
+              <span class="info-value">${d.no_log_trim || '-'}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Tanggal Proses</span>
+              <span class="info-value">${formatTanggal(d.created_at)}</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>🎬 Video Proses Sawmill</h2>
+            ${embedUrl
+              ? `<div class="video-wrap"><iframe src="${embedUrl}" allowfullscreen></iframe></div>`
+              : `<div class="no-video">📹 Video belum tersedia</div>`
+            }
+          </div>
+        `;
+
+      } catch(e) {
+        document.getElementById('content').innerHTML = '<div class="error">❌ Error: ' + e.message + '</div>';
+      }
+    }
+
+    loadData();
+  </script>
+
+</body>
+</html>
